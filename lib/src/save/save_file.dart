@@ -119,6 +119,7 @@ class Save {
           XmlElement(XmlName('v'), [], [XmlText('')]),
         ];
       case IntCellValue():
+        numberFormat ??= NumFormat.defaultNumeric;
         final String v = switch (numberFormat) {
           NumericNumFormat() => numberFormat.writeInt(value),
           _ => throw Exception(
@@ -128,6 +129,7 @@ class Save {
           XmlElement(XmlName('v'), [], [XmlText(v)]),
         ];
       case DoubleCellValue():
+        numberFormat ??= NumFormat.defaultNumeric;
         final String v = switch (numberFormat) {
           NumericNumFormat() => numberFormat.writeDouble(value),
           _ => throw Exception(
@@ -137,6 +139,7 @@ class Save {
           XmlElement(XmlName('v'), [], [XmlText(v)]),
         ];
       case DateTimeCellValue():
+        numberFormat ??= NumFormat.defaultDateTime;
         final String v = switch (numberFormat) {
           DateTimeNumFormat() => numberFormat.writeDateTime(value),
           _ => throw Exception(
@@ -146,6 +149,7 @@ class Save {
           XmlElement(XmlName('v'), [], [XmlText(v)]),
         ];
       case DateCellValue():
+        numberFormat ??= NumFormat.defaultDate;
         final String v = switch (numberFormat) {
           DateTimeNumFormat() => numberFormat.writeDate(value),
           _ => throw Exception(
@@ -155,6 +159,7 @@ class Save {
           XmlElement(XmlName('v'), [], [XmlText(v)]),
         ];
       case TimeCellValue():
+        numberFormat ??= NumFormat.defaultTime;
         final String v = switch (numberFormat) {
           TimeNumFormat() => numberFormat.writeTime(value),
           _ => throw Exception(
