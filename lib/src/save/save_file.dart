@@ -514,14 +514,18 @@ class Save {
         .sorted((a, b) => a.key.compareTo(b.key));
 
     if (customNumberFormats.isNotEmpty) {
-      var numFmtsElement = styleSheet
+      final innerStyleSheet = styleSheet
+          .findAllElements('styleSheet')
+          .whereType<XmlElement>()
+          .first;
+      var numFmtsElement = innerStyleSheet
           .findAllElements('numFmts')
           .whereType<XmlElement>()
           .firstOrNull;
       int count;
       if (numFmtsElement == null) {
         numFmtsElement = XmlElement(XmlName('numFmts'));
-        styleSheet.children.insert(0, numFmtsElement);
+        innerStyleSheet.children.insert(0, numFmtsElement);
       }
       count = int.parse(numFmtsElement.getAttribute('count') ?? '0');
 
