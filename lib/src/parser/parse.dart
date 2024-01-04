@@ -538,6 +538,18 @@ class Parser {
     _excel._xmlFiles['xl/$target'] = content;
     _excel._xmlSheetId[name] = 'xl/$target';
 
+    final columnElements = content.findAllElements('cols');
+    if (columnElements.isNotEmpty) {
+      final columns = columnElements.first;
+      for (final e in columns.findElements('col')) {
+        final min = e.getAttribute('min');
+        final width = e.getAttribute('width');
+        if (min!=null && width!=null) {
+          sheetObject.setColumnWidth(int.parse(min)-1, double.parse(width));
+        }
+      }
+    }
+
     _normalizeTable(sheetObject);
   }
 
