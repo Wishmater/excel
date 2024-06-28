@@ -1276,7 +1276,7 @@ class Sheet {
           }
           return match.input;
         });
-        _sheetData[i]![j]!.value = TextCellValue(result);
+        _sheetData[i]![j]!.value = TextCellValue(result, sanitizeValue: false);
       }
     }
 

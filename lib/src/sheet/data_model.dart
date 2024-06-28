@@ -213,7 +213,11 @@ class DateCellValue extends CellValue {
 class TextCellValue extends CellValue {
   final String value;
 
-  const TextCellValue(this.value);
+  TextCellValue(String value, {
+    bool sanitizeValue = true,
+  })  : value = sanitizeValue
+                  ? value.replaceAll(String.fromCharCode(0x02), ' ') // this char code breaks xml parsing (and xlsx because it uses xml)
+                  : value;
 
   @override
   String toString() {

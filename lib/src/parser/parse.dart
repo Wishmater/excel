@@ -595,7 +595,7 @@ class Parser {
       case 's':
         final sharedString = _excel._sharedStrings
             .value(int.parse(_parseValue(node.findElements('v').first)));
-        value = TextCellValue(sharedString!.stringValue);
+        value = TextCellValue(sharedString!.stringValue, sanitizeValue: false);
         break;
       // boolean
       case 'b':
@@ -612,7 +612,7 @@ class Parser {
         // <c r='B2' t='inlineStr'>
         // <is><t>Dartonico</t></is>
         // </c>
-        value = TextCellValue(_parseValue(node.findAllElements('t').first));
+        value = TextCellValue(_parseValue(node.findAllElements('t').first), sanitizeValue: false);
         break;
       // number
       case 'n':
