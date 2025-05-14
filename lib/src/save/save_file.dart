@@ -2,13 +2,11 @@ part of excel;
 
 class Save {
   final Excel _excel;
-  late Map<String, ArchiveFile> _archiveFiles;
-  late List<CellStyle> _innerCellStyle;
+  final Map<String, ArchiveFile> _archiveFiles = {};
+  final List<CellStyle> _innerCellStyle = [];
   final Parser parser;
-  Save._(this._excel, this.parser) {
-    _archiveFiles = <String, ArchiveFile>{};
-    _innerCellStyle = <CellStyle>[];
-  }
+
+  Save._(this._excel, this.parser);
 
   void _addNewColumn(XmlElement columns, int min, int max, double width) {
     columns.children.add(XmlElement(XmlName('col'), [
@@ -33,25 +31,6 @@ class Save {
     return ((maxNumOfCharacters * 7.0 + 9.0) / 7.0 * 256).truncate() / 256;
   }
 
-  Archive _cloneArchive(Archive archive) {
-    var clone = Archive();
-    archive.files.forEach((file) {
-      if (file.isFile) {
-        ArchiveFile copy;
-        if (_archiveFiles.containsKey(file.name)) {
-          copy = _archiveFiles[file.name]!;
-        } else {
-          var content = file.content as Uint8List;
-          var compress = !_noCompression.contains(file.name);
-          copy = ArchiveFile(file.name, content.length, content)
-            ..compress = compress;
-        }
-        clone.addFile(copy);
-      }
-    });
-    return clone;
-  }
-
   /*   XmlElement _replaceCell(String sheet, XmlElement row, XmlElement lastCell,
       int columnIndex, int rowIndex, CellValue? value) {
     var index = lastCell == null ? 0 : row.children.indexOf(lastCell);
@@ -67,11 +46,11 @@ class Save {
       CellValue? value, NumFormat? numberFormat) {
     SharedString? sharedString;
     if (value is TextCellValue) {
-      sharedString = _excel._sharedStrings.tryFind(value.value);
+      sharedString = _excel._sharedStrings.tryFind(value.toString());
       if (sharedString != null) {
-        _excel._sharedStrings.add(sharedString, value.value);
+        _excel._sharedStrings.add(sharedString, value.toString());
       } else {
-        sharedString = _excel._sharedStrings.addFromString(value.value);
+        sharedString = _excel._sharedStrings.addFromString(value.toString());
       }
     }
 
@@ -80,6 +59,7 @@ class Save {
     var attributes = <XmlAttribute>[
       XmlAttribute(XmlName('r'), rC),
       if (value is TextCellValue) XmlAttribute(XmlName('t'), 's'),
+      if (value is BoolCellValue) XmlAttribute(XmlName('t'), 'b'),
     ];
 
     final cellStyle =
@@ -123,7 +103,7 @@ class Save {
         final String v = switch (numberFormat) {
           NumericNumFormat() => numberFormat.writeInt(value),
           _ => throw Exception(
-              '${numberFormat} does not work for ${value.runtimeType}'),
+              '$numberFormat does not work for ${value.runtimeType}'),
         };
         children = [
           XmlElement(XmlName('v'), [], [XmlText(v)]),
@@ -133,7 +113,7 @@ class Save {
         final String v = switch (numberFormat) {
           NumericNumFormat() => numberFormat.writeDouble(value),
           _ => throw Exception(
-              '${numberFormat} does not work for ${value.runtimeType}'),
+              '$numberFormat does not work for ${value.runtimeType}'),
         };
         children = [
           XmlElement(XmlName('v'), [], [XmlText(v)]),
@@ -143,7 +123,7 @@ class Save {
         final String v = switch (numberFormat) {
           DateTimeNumFormat() => numberFormat.writeDateTime(value),
           _ => throw Exception(
-              '${numberFormat} does not work for ${value.runtimeType}'),
+              '$numberFormat does not work for ${value.runtimeType}'),
         };
         children = [
           XmlElement(XmlName('v'), [], [XmlText(v)]),
@@ -153,7 +133,7 @@ class Save {
         final String v = switch (numberFormat) {
           DateTimeNumFormat() => numberFormat.writeDate(value),
           _ => throw Exception(
-              '${numberFormat} does not work for ${value.runtimeType}'),
+              '$numberFormat does not work for ${value.runtimeType}'),
         };
         children = [
           XmlElement(XmlName('v'), [], [XmlText(v)]),
@@ -163,7 +143,7 @@ class Save {
         final String v = switch (numberFormat) {
           TimeNumFormat() => numberFormat.writeTime(value),
           _ => throw Exception(
-              '${numberFormat} does not work for ${value.runtimeType}'),
+              '$numberFormat does not work for ${value.runtimeType}'),
         };
         children = [
           XmlElement(XmlName('v'), [], [XmlText(v)]),
@@ -175,7 +155,9 @@ class Save {
           ]),
         ];
       case BoolCellValue():
-        children = [];
+        children = [
+          XmlElement(XmlName('v'), [], [XmlText(value.value ? '1' : '0')]),
+        ];
     }
 
     return XmlElement(XmlName('c'), attributes, children);
@@ -196,7 +178,7 @@ class Save {
   /// Writing Font Color in [xl/styles.xml] from the Cells of the sheets.
 
   void _processStylesFile() {
-    _innerCellStyle = <CellStyle>[];
+    _innerCellStyle.clear();
     List<String> innerPatternFill = <String>[];
     List<_FontStyle> innerFontStyle = <_FontStyle>[];
     List<_BorderSet> innerBorderSet = <_BorderSet>[];
@@ -231,7 +213,7 @@ class Save {
       }
 
       /// Filling the inner usable extra list of background color
-      String backgroundColor = cellStyle.backgroundColor;
+      String backgroundColor = cellStyle.backgroundColor.colorHex;
       if (!_excel._patternFill.contains(backgroundColor) &&
           !innerPatternFill.contains(backgroundColor)) {
         innerPatternFill.add(backgroundColor);
@@ -260,11 +242,11 @@ class Save {
       fonts.children.add(XmlElement(XmlName('font'), [], [
         /// putting color
         if (fontStyleElement._fontColorHex != null &&
-            fontStyleElement._fontColorHex != "FF000000")
-          XmlElement(
-              XmlName('color'),
-              [XmlAttribute(XmlName('rgb'), fontStyleElement._fontColorHex!)],
-              []),
+            fontStyleElement._fontColorHex!.colorHex != "FF000000")
+          XmlElement(XmlName('color'), [
+            XmlAttribute(
+                XmlName('rgb'), fontStyleElement._fontColorHex!.colorHex)
+          ], []),
 
         /// putting bold
         if (fontStyleElement.isBold) XmlElement(XmlName('b'), [], []),
@@ -415,7 +397,7 @@ class Save {
     }
 
     _innerCellStyle.forEach((cellStyle) {
-      String backgroundColor = cellStyle.backgroundColor;
+      String backgroundColor = cellStyle.backgroundColor.colorHex;
 
       _FontStyle _fs = _FontStyle(
           bold: cellStyle.isBold,
@@ -514,18 +496,21 @@ class Save {
         .sorted((a, b) => a.key.compareTo(b.key));
 
     if (customNumberFormats.isNotEmpty) {
-      final innerStyleSheet = styleSheet
-          .findAllElements('styleSheet')
-          .whereType<XmlElement>()
-          .first;
-      var numFmtsElement = innerStyleSheet
+      var numFmtsElement = styleSheet
           .findAllElements('numFmts')
           .whereType<XmlElement>()
           .firstOrNull;
       int count;
       if (numFmtsElement == null) {
         numFmtsElement = XmlElement(XmlName('numFmts'));
-        innerStyleSheet.children.insert(0, numFmtsElement);
+
+        ///FIX: if no default numFormats were added in styles.xml - customNumFormats were added in wrong place,
+        styleSheet
+            .findElements('styleSheet')
+            .first
+            .children
+            .insert(0, numFmtsElement);
+        // styleSheet.children.insert(0, numFmtsElement);
       }
       count = int.parse(numFmtsElement.getAttribute('count') ?? '0');
 
@@ -581,7 +566,7 @@ class Save {
       var content = utf8.encode(xml);
       _archiveFiles[xmlFile] = ArchiveFile(xmlFile, content.length, content);
     }
-    return ZipEncoder().encode(_cloneArchive(_excel._archive));
+    return ZipEncoder().encode(_cloneArchive(_excel._archive, _archiveFiles));
   }
 
   void _setColumns(Sheet sheetObject, XmlDocument xmlFile) {

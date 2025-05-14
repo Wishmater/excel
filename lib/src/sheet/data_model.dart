@@ -211,17 +211,18 @@ class DateCellValue extends CellValue {
 }
 
 class TextCellValue extends CellValue {
-  final String value;
+  final TextSpan value;
 
-  TextCellValue(String value, {
+  TextCellValue(String text{
     bool sanitizeValue = true,
-  })  : value = sanitizeValue
-                  ? value.replaceAll(String.fromCharCode(0x02), ' ') // this char code breaks xml parsing (and xlsx because it uses xml)
-                  : value;
+  }) : value = TextSpan(text: sanitizeValue ? text.replaceAll(String.fromCharCode(0x02), ' ') : text);
+  TextCellValue.span(this.value, {
+    bool sanitizeValue = true,
+  });
 
   @override
   String toString() {
-    return value;
+    return value.toString();
   }
 
   @override
@@ -272,7 +273,7 @@ class TimeCellValue extends CellValue {
         assert(microsecond <= 1000 && microsecond >= 0);
 
   /// [fractionOfDay]=1.0 is 24 hours, 0.5 is 12 hours and so on.
-  factory TimeCellValue.fromFractionOfDay(double fractionOfDay) {
+  factory TimeCellValue.fromFractionOfDay(num fractionOfDay) {
     var duration =
         Duration(milliseconds: (fractionOfDay * 24 * 3600 * 1000).round());
     return TimeCellValue.fromDuration(duration);
