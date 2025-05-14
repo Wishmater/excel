@@ -213,9 +213,10 @@ class DateCellValue extends CellValue {
 class TextCellValue extends CellValue {
   final TextSpan value;
 
-  TextCellValue(String text{
+  TextCellValue(String text, {
     bool sanitizeValue = true,
   }) : value = TextSpan(text: sanitizeValue ? text.replaceAll(String.fromCharCode(0x02), ' ') : text);
+
   TextCellValue.span(this.value, {
     bool sanitizeValue = true,
   });
